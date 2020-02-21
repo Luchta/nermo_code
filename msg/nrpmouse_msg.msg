@@ -1,0 +1,9 @@
+float64 time_stamp
+float64 fla1
+float64 fla2
+float64 fra1
+float64 fra2
+float64 hla1
+float64 hla2
+float64 hra1
+float64 hra2
