@@ -1,5 +1,5 @@
-# nermo_code
- code repository to control all versions of the NeRmo robot, including the Gazebo simulation model
+# nermo_code (master Version 4.1)
+ code repository to control the latest version of NeRmo (V4.1).
 
 ## DISCLAIMER
 
@@ -20,7 +20,7 @@ Choose your branch:
 ```
 mkdir build
 cd build
-.. catkin_make
+cmake ..
 make
 ```
 3. you can start the control programm using
