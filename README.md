@@ -1,4 +1,4 @@
-# nermo_code
+# nermo_code (Version 2 to 3)
 code repository to control versions 2 to 3 of the NeRmo robot.
 
 For other Versions switch branch:
