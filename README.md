@@ -1,4 +1,4 @@
-# nermo_code
+# nermo_code (Version 4 - Standard Servos)
 code repository to control the standard servo version 4 of the NeRmo robot.
 
 For other Versions switch branch:
