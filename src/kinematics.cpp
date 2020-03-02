@@ -1,12 +1,12 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 // kinematics.cpp
 
-#include "Kinematics.h"
+#include "kinematics.h"
 #define _USE_MATH_DEFINES
 #include <math.h>   //cos sin and all
 
 
-//Foreleg Functions////////////////////////////////////////////////////////////////////////////////////////////////
+//------Foreleg Functions-----------
 CLegPos CKinematics::ikforeleg(double fx, double fy, char side)
 {
     //side can be l( left leg ) and r (right leg)
@@ -20,10 +20,10 @@ CLegPos CKinematics::ikforeleg(double fx, double fy, char side)
     double fpos_init[1][2]={28,55.15};	//corresponding to trot gait
 
     //---- intermediate Values -----------------------
-    double ft1=0;	//shoulder angle
-    double ft2=0;	//elbow angle
-    double flb=0;	//length elbow-fingertip
-    double ftb=0;	//angle upper_arm - flb
+    double ft1;	//shoulder angle
+    double ft2;	//elbow angle
+    double flb;	//length elbow-fingertip
+    double ftb;	//angle upper_arm - flb
 
     //shifting the goal coordinate by the initial toe coordinate
     fx=fx-fpos_init[0][0];         //origin position of the leg (easier for trajectory planning)(relative to center point of trajectory circle)
@@ -39,10 +39,10 @@ CLegPos CKinematics::ikforeleg(double fx, double fy, char side)
     {ft1=M_PI-atan(fy/fx)-asin(flb*sin(ftb)/sqrt(pow(fx,2)+pow(fy,2)));}
     else if (fx>0)
     {ft1=-atan(fy/fx)-asin(flb*sin(ftb)/sqrt(pow(fx,2)+pow(fy,2)));}
-    else //if (fx==0) only 0 remains
+    else if (fx==0)
     {ft1=(90*M_PI/180)-asin(flb*sin(ftb)/sqrt(pow(fx,2)+pow(fy,2)));}
 
-    // RÃ¼ckrechnung in Grad
+    // Rückrechnung in Grad
     ft1=ft1*180/M_PI;
     ft2=ft2*180/M_PI;
 
@@ -62,33 +62,32 @@ double CKinematics::foreKneeServoAngle(double ft1,double ft2, char side)
     //hip pulley is 8mm diameter, 1mm string diameter sweep, 3.5mm effective radius
     //distance from string attachment point to knee geometric center=13.914mm
     //initial string length=41.198mm (geometric length)(From Solidworks)
-    double lknee=0,fls=0, centerdist=0, lhip=0;
+    double lknee;
+    double fls;
+    double centerdist;
+    double lhip;
 
-    //calcuate length of string at the hip turn
     if (ft1>ft1i)         											//when leg is moved forward
     {lhip=(fahip-(ft1-ft1i))*M_PI/180*3.7;} 						//the string length at the hip pulley,
     else    														//when leg is moved backward
     {lhip=(fahip+(ft1i-ft1))*M_PI/180*3.7;}
 
-    //calculate length of string from hip to attachment point at leg
-    centerdist=sqrt(pow(fl1,2)+pow(fltibia,2)-(2*fl1*fltibia*cos(ft2*M_PI/180))); //length from attachment point to hip centre
-    lknee=sqrt(pow(centerdist,2)-pow(frhip,2)); //length from hip tanget to attachment point
+    centerdist=sqrt(pow(fl1,2)+pow(fltibia,2)-(2*fl1*fltibia*cos(ft2*M_PI/180)));
+    lknee=sqrt(pow(centerdist,2)-pow(frhip,2));
 
     fls=lhip+lknee;     											//total calculated length
 
-    //calculation for left/right side
-    // *180/M_PI is for change from radians to degrees
     if (side == 'l')
-    {                                                                   //left side-----------------
+    {
         if (fls>flsi)        											//need to release string, turn cw (+)
-        {return lflCoilInit+(kneeservoangle(fls-flsi))*180/M_PI;}
+        {return fksainit+(kneeservoangle(fls-flsi))*180/M_PI;}
         else                  											//need to tension string
-        {return lflCoilInit-(kneeservoangle(flsi-fls))*180/M_PI;}
-    }else {                                                             //right side-------------------
+        {return fksainit-(kneeservoangle(flsi-fls))*180/M_PI;}
+    }else {
         if (fls>flsi)         											//need to release string, turn anticw(-)
-        {return rflCoilInit-(kneeservoangle(fls-flsi))*180/M_PI;}
+        {return fksainit-(kneeservoangle(fls-flsi))*180/M_PI;}
         else                  											//need to tension string, turn cw (+)
-        {return rflCoilInit+(kneeservoangle(flsi-fls))*180/M_PI;}
+        {return fksainit+(kneeservoangle(flsi-fls))*180/M_PI;}
     }
 
 
@@ -96,28 +95,26 @@ double CKinematics::foreKneeServoAngle(double ft1,double ft2, char side)
 
 double CKinematics::foreHipServoAngle(double ft1, char side)
 {
-    //calculates the servoangle for the foreleg hip servos
-    //Forumlar: ServoCentrePosition +- (abs(initialKinematicAngle - newKinematicAngle))
-    // Servo Centre Position depends on servo range, as the range as to aviod running into unavailaple positions
-    //double ft1i=53; already defined
-    //double fhsainit=90;	// now lflHipInit and rflHipInit//like the midpointposition of the servo
-    //double floffset=5;	//offset for calibration of servo position (manufacturing/assembly problem from the servo)
+    //calculates the servoangle for hip servo for foreleg
+    double ft1i=53;
+    double fhsainit=90;	//like the midpointposition of the servo
+    double floffset=5;	//offset for calibration of servo position (manufacturing/assembly problem from the servo)
     if (side == 'l')
     {
         if (ft1>ft1i)       //move leg forward, turn cw (+)
-        {return lflHipInit+(ft1-ft1i)+flOffset;}
+        {return fhsainit+(ft1-ft1i)+floffset;}
         else                //move leg back
-        {return lflHipInit-(ft1i-ft1)+flOffset;}
+        {return fhsainit-(ft1i-ft1)+floffset;}
     }
     else {
         if (ft1>ft1i)       //move leg forward, turn anticw (-)
-        {return rflHipInit-(ft1-ft1i)+frOffset;}
+        {return fhsainit-(ft1-ft1i);}
         else                //move leg back,
-        {return rflHipInit+(ft1i-ft1)+frOffset;}
+        {return fhsainit+(ft1i-ft1);}
     }
 }
 
-//Hindleg Functions////////////////////////////////////////////////////////////////////////////////////////
+//------Hindleg Functions-----------
 CLegPos CKinematics::ikhindleg(double hx, double hy, char side)
 {
     //side can be l( left leg ) and r (right leg)
@@ -147,10 +144,10 @@ CLegPos CKinematics::ikhindleg(double hx, double hy, char side)
 
     //---- intermediate Values -----
 
-    double ht1=0, //Hip Angle - theta 1
-            ht2=0,	//Knee Angle - theta 2
-            hlb=0, //length knee-toe
-            htb=0;	// angle oberschenkel-knee-toe
+    double ht1; //Hip Angle - theta 1
+    double ht2;	//Knee Angle - theta 2
+    double hlb; //length knee-toe
+    double htb;	// angle oberschenkel-knee-toe
 
     //shifting the goal coordinate by the initial toe coordinate
     hx = hx-hpos_init[0][0];
@@ -170,7 +167,7 @@ CLegPos CKinematics::ikhindleg(double hx, double hy, char side)
     {
         ht1=atan(hy/hx)-asin(hlb*sin(htb)/sqrt(pow(hx,2)+pow(hy,2)));
     }
-    else //if (hx==0) only 0 remains
+    else if (hx==0)
     {
         ht1=(90*M_PI/180)-asin(hlb*sin(htb)/sqrt(pow(hx,2)+pow(hy,2)));
     }
@@ -195,61 +192,61 @@ double CKinematics::hindKneeServoAngle(double ht1, double ht2, char side)
     //hip pulley is 8mm diameter, 1mm string diameter sweep, 3.5mm effective radius
     //distance from string attachment point to knee geometric center=16.037mm
     //initial string length=37.687mm (geometric length)(From Solidworks)
-    double lknee=0, hls=0, centerdist=0, lhip=0;
+    double lknee;
+    double hls;
+    double centerdist;
+    double lhip;
 
-    //calcuate length of string at the hip turn
     if (ht1>ht1i)           										//when leg is moved backward
     {lhip=(hahip-(ht1-ht1i))*M_PI/180*3.7;} 						//the string length at the hip pulley,
     else                    										//when leg is moved forward
     {lhip=(hahip+(ht1i-ht1))*M_PI/180*3.7;}
 
-    //calculate length of string from hip to attachment point at leg
-    centerdist=sqrt(pow(hl1,2)+pow(hltibia,2)-(2*hl1*hltibia*cos(ht2*M_PI/180)));//length from attachment point to hip centre
-    lknee=sqrt(pow(centerdist,2)-pow(hrhip,2));//length from hip tanget to attachment point
+    //
+    centerdist=sqrt(pow(hl1,2)+pow(hltibia,2)-(2*hl1*hltibia*cos(ht2*M_PI/180)));
+    lknee=sqrt(pow(centerdist,2)-pow(hrhip,2));
 
     hls=lhip+lknee;     											//total calculated length
 
-    //calculation for left/right side
-    // *180/M_PI is for change from radians to degrees
+    //calculation for left side
     if (side == 'l')
-    {                                                                   //left side-----------------
+    {
         if (hls>hlsi)         											//need to release string, turn anticw (-)
-        {return lhlCoilInit-(kneeservoangle(hls-hlsi))*180/M_PI;}
+        {return hksainit-(kneeservoangle(hls-hlsi))*180/M_PI;}
         else                											//need to tension string
-        {return lhlCoilInit+(kneeservoangle(hlsi-hls))*180/M_PI;} 		//returns the final servo angle value in (degrees)
+        {return hksainit+(kneeservoangle(hlsi-hls))*180/M_PI;} 		//returns the final servo angle value in (degrees)
     }
-    else //if (side == 'r')
-    {                                                                   //right side-----------------
+    else if (side == 'r')//calculation for right side
+    {
         if (hls>hlsi)         											//need to release string, turn cw(+)
-        {return rhlCoilInit+(kneeservoangle(hls-hlsi))*180/M_PI;}
+        {return hksainit+(kneeservoangle(hls-hlsi))*180/M_PI;}
         else                											//need to tension string
-        {return rhlCoilInit-(kneeservoangle(hlsi-hls))*180/M_PI;} 		//returns the final servo angle value in (degrees)
+        {return hksainit-(kneeservoangle(hlsi-hls))*180/M_PI;} 		//returns the final servo angle value in (degrees)
     }
-    /*else {
+    else {
         return -1;
-    }*/
+    }
 
 }
 
 double CKinematics::hindHipServoAngle(double ht1, char side)
 {
-    //calculates the servoangle for the hindleg hip servos
-    //Forumlar: ServoCentrePosition +- (abs(initialKinematicAngle - newKinematicAngle))
-    // Servo Centre Position depends on servo range, as the range as to aviod running into unavailaple positions
+    //calculates the servoangle for hip servo for hindleg
+    double ht1i=8;
     if (side == 'l')
     {
-        //double hhsainit=150;//now lhlHipInit //like the midpointposition of the servo
+        double hhsainit=150;//like the midpointposition of the servo
         if (ht1>ht1i)       //move leg back,  turn anti cw (-)
-        {return lhlHipInit-(ht1-ht1i)+hlOffset;}
+        {return hhsainit-(ht1-ht1i);}
         else                //move leg forward
-        {return lhlHipInit+(ht1i-ht1)+hlOffset;}
+        {return hhsainit+(ht1i-ht1);}
     }
     else {
-        //double hhsainit=30;//now rhlHipInit //like the midpointposition of the servo
+        double hhsainit=30;//like the midpointposition of the servo
         if (ht1>ht1i)       //move leg back,  turn cw (+)
-        {return rhlHipInit+(ht1-ht1i)+hrOffset;}
+        {return hhsainit+(ht1-ht1i);}
         else                //move leg forward
-        {return rhlHipInit-(ht1i-ht1)+hrOffset;}
+        {return hhsainit-(ht1i-ht1);}
     }
 }
 
