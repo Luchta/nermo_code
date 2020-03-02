@@ -14,6 +14,18 @@ Choose your branch:
 * version2to3: Code for versions 2,2.1 and 3 of NeRmo
 * version1: Code for the first version of NeRmo
 
-
+## Setup
+1. Clone this repository to the raspberry pi on the robot
+2. in a terminal in this folder run in order
+```
+mkdir build
+cd build
+.. catkin_make
+make
+```
+3. you can start the control programm using
+```
+.\Simple_Mouse
+```
 ## License
 [GPLv3](https://fsf.org/)
