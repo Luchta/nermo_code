@@ -1,0 +1,5 @@
+# ignore these folders
+build/
+
+#ignore this file
+#CMakeLists.txt.user
